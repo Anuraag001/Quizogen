@@ -8,17 +8,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <div class="flex flex-wrap flex-col px-5 py-2 basis-full h-screen w-screen ">
+    <div class="flex flex-col px-5 py-2 basis-full grow h-screen w-screen ">
         <div class="flex flex-row basis-auto flex-none bg-slate-100">Quizogen</div>
+        <form method="post" action="{% url 'front' %}">
+            {% csrf_token %}
         <div class="flex px-5 flex-row basis-7/12 w-full bg-slate-300 grow-1 justify-between flex-wrap">
-            <div class="flex flex-row basis-3/4 h-3/4 w-3/4 shrink-0 bg-slate-0 self-center items-start "><textarea class="h-full w-full text-start border-solid border-4 border-green-600"></textarea></div>
+            <div class="flex flex-row basis-3/4 h-3/4 w-3/4 py-2 grow shrink-0 bg-slate-0 self-center items-start "><div class="min-h-64 w-full text-start border-solid border-4 border-green-600 bg-white" id="text" contenteditable="true"><input type="hidden" id="hidden-text" name="textinput"></div></div>
             <div class="flex flex-col basis-1/4 self-center gap-y-10">
-                <button class="flex flex-row justify-center rounded-full w-40 grow-0 bg-lime-500 py-2 gap-x-2 self-center items-center"><img src="{% static 'img/generate.png' %}" class="h-1/6 w-1/6" alt=""><div>Generate</div></button>
-                <button class="flex flex-row justify-center rounded-full w-40 grow-0 bg-rose-900 py-2 gap-x-2 self-center items-center"><img src="{% static 'img/delete.png' %}" class="h-1/6 w-1/6" alt=""><div>Delete</div></button>
+                <button class="flex flex-row justify-center rounded-full w-40 grow-0 bg-lime-500 py-2 gap-x-2 self-center items-center" type="submit" id="gen-btn"><img src="{% static 'img/generate.png' %}" class="h-1/6 w-1/6" alt=""><div>Generate</div></button>
+                <button class="flex flex-row justify-center rounded-full w-40 grow-0 bg-rose-900 py-2 gap-x-2 self-center items-center" id="del-btn"><img src="{% static 'img/delete.png' %}" class="h-1/6 w-1/6" alt=""><div>Delete</div></button>
             </div>
         </div>
-        <div class="flex flex-col basis-auto flex-none bg-slate-500">af;mm</div>
+    </form>
+        <div class="flex flex-col basis-auto flex-none bg-slate-500">
+            {% for question in questions %}
+                <div>{{ question }}</div>
+            {% endfor %}
+        </div>
     </div>
-    
+    <script src="{% static 'js/change.js' %}"></script>
 </body>
 </html>
