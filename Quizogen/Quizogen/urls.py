@@ -16,9 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from quiz.views import front
+from quiz.views import front,check_ans_form,que_gen_form
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',front,name='front')
+    path('',front,name='front'),
+    path('que_gen/',que_gen_form,name='que_gen_form'),
+    path('check/',check_ans_form,name='check_ans_form'),
+    
 ]

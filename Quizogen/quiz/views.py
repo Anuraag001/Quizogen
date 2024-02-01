@@ -11,6 +11,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 nlp=spacy.load('en_core_web_lg')
+final_list=[]
+
+Tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+Model = AutoModel.from_pretrained("bert-base-uncased")
 
 # Create your views here.
 def preprocess(sent,type=0):
@@ -79,8 +83,7 @@ def get_questions(text):
     model = AutoModelWithLMHead.from_pretrained("mrm8488/t5-base-finetuned-question-generation-ap")
 
     x=20
-    questions=[]
-    answers=[]
+    data_list=[]
     while x>0:
         flag=True
         for sent in sent_score_map[:,1]:
@@ -93,24 +96,63 @@ def get_questions(text):
                     word_score_map = np.delete(word_score_map, np.where(word_score_map == word))
                     x-=1
                     flag=False
-                    questions.append(str(question[16:-4]))
-                    answers.append(str(word))
+                    data_list.append({
+                        'question': str(question[16:-4]),
+                        'answer': str(word),
+                        'type': str(d.ents[0].label_),
+                        'explanation': str(explanation)
+                    })
                     break
             if x==0 or word_score_map.size==0:
                 break
         if flag:
             break
-    return questions,answers
+    return data_list
 
 
 
 def front(request):
+    data_list=[]
+    data_list.append({
+        'question': 'a',
+        'answer': 'b',
+        'type': 'c',
+        'explanation': 'd'
+    })
+    return render(request, "front.html",{"count":False,"dict_":data_list})
+
+def que_gen_form(request):
+    global final_list
     if request.method=='POST':
         text=request.POST['textinput']
-        questions,answers=get_questions(text)
-        count=len(questions)
-        count=np.arange(count)
-        for question in questions:
-            print(question)
-        return render(request,'front.html',{"questions":questions,"answers":answers,"count":count})
-    return render(request, "front.html",{"questions":[""],"answers":[""],"count":[0]})
+        data_list=get_questions(text)
+    final_list=data_list
+    return render(request,'front.html',{"count":True,"dict_":data_list})
+
+def cosine_similarity_(sentence1, sentence2):
+
+    inputs1 = Tokenizer(sentence1, return_tensors="pt", truncation=True)
+    inputs2 = Tokenizer(sentence2, return_tensors="pt", truncation=True)
+    with torch.no_grad():
+        embeddings1 = Model(**inputs1).last_hidden_state.mean(dim=1).numpy()
+        embeddings2 = Model(**inputs2).last_hidden_state.mean(dim=1).numpy()
+
+    similarity_score = cosine_similarity(embeddings1, embeddings2)[0, 0]
+    if similarity_score>0.75 :
+        return "..."
+    else:
+        return ""
+
+def check_ans_form(request):
+    final_view=[]
+    if request.method=='POST':
+        for i in range(len(request.POST)-1):
+            user_answer=str(request.POST[f"qn_{i+1}"])
+            final_view.append({
+                'question':final_list[i]['question'],
+                'answer':final_list[i]['answer'],
+                'user_answer':user_answer,
+                'similarity':cosine_similarity_(str(final_list[i]['answer']),user_answer)
+            })
+    return render(request,"final.html",{"final_view":final_view})
+
